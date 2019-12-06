@@ -30,9 +30,9 @@ public class PayPalController {
     }
 
        @PostMapping("/complete/payment")
-    public Map<String, Object> completePayment(HttpServletRequest request, @RequestParam("paymentId") String paymentId, @RequestParam("payerId") String payerId){
+    public Map<String, Object> completePayment(HttpServletRequest request,@RequestParam("token") String token, @RequestParam("paymentId") String paymentId, @RequestParam("payerId") String payerId){
        System.out.println("in complement");
-       System.out.println(paymentId);
+       System.out.println(token);
     	   return payPalClient.completePayment(request);
     }
 

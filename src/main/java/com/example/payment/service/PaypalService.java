@@ -21,11 +21,10 @@ import com.paypal.base.rest.PayPalRESTException;
 
 @Service
 public class PaypalService {
-	String clientId = "ARlxb0M1A3epZShYB-l2RBgJ2PLhR19dkS5_0_7wrqxGF1Z7shIydqfzgtW_7R5wnIVXneAYDx09AgwM";
-	String clientSecret = "ELSPVUmY0iukSUySqhurDnvT9JpFt5SHGL4o7OFhRQ0qNl1Gxm3qlwqVQuibPZObfjSm09676BoPl_F5";
+	String clientId = "AeAnj6xj9uyWemXMzOq-6ZcT3zxkakvT4uz7VAl7tLynVtMG2aZ0JJkDq3SMKw93Z380_IFSV2gGQtQj";
+	String clientSecret = "EPkzML2k-n02ElDvPKrMkHR7vMw_kf3IL6Fuu6hKlvtDr_7tvjKg7AMXCnYeMoMqJgiUmezUL76f2mZL";
 
-//@Autowired
-//PayPalClient(){}
+
 
 	public Map<String, Object> createPayment(String sum) {
 		Map<String, Object> response = new HashMap<String, Object>();
@@ -58,6 +57,7 @@ public class PaypalService {
 			APIContext context = new APIContext(clientId, clientSecret, "sandbox");
 			System.out.println("2nd");
 			createdPayment = payment.create(context);
+			System.out.println(createdPayment);
 			System.out.println("3rd");
 			if (createdPayment != null) {
 				List<Links> links = createdPayment.getLinks();
@@ -79,21 +79,26 @@ public class PaypalService {
 
 	public Map<String, Object> completePayment(HttpServletRequest req) {
 		System.out.println("in complete payments");
-		Map<String, Object> response = new HashMap<>();
+		Map<String, Object> response = new HashMap<String,Object>();
 		Payment payment = new Payment();
+		String accessToken=req.getParameter("token");
+		
 		payment.setId(req.getParameter("paymentId"));
 		PaymentExecution paymentExecution = new PaymentExecution();
 		paymentExecution.setPayerId(req.getParameter("payerId"));
 		try {
 			APIContext context = new APIContext(clientId, clientSecret, "sandbox");
 			Payment createdPayment = payment.execute(context, paymentExecution);
+			System.out.println(createdPayment);
 			if (createdPayment != null) {
+				System.out.println("hi");
 				response.put("status", "success");
-				response.put("payment", createdPayment);
+				response.put("payment", createdPayment.toString());
 			}
 		} catch (PayPalRESTException e) {
 			System.err.println(e.getDetails());
 		}
+		System.out.println(response);
 		return response;
 	}
 }
