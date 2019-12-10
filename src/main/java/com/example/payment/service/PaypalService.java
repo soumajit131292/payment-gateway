@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.payment.config.PaypalConfig;
 import com.paypal.api.payments.Amount;
 import com.paypal.api.payments.Links;
 import com.paypal.api.payments.Payer;
@@ -16,14 +16,12 @@ import com.paypal.api.payments.Payment;
 import com.paypal.api.payments.PaymentExecution;
 import com.paypal.api.payments.RedirectUrls;
 import com.paypal.api.payments.Transaction;
-import com.paypal.base.rest.APIContext;
 import com.paypal.base.rest.PayPalRESTException;
 
 @Service
 public class PaypalService {
-	String clientId = "AeAnj6xj9uyWemXMzOq-6ZcT3zxkakvT4uz7VAl7tLynVtMG2aZ0JJkDq3SMKw93Z380_IFSV2gGQtQj";
-	String clientSecret = "EPkzML2k-n02ElDvPKrMkHR7vMw_kf3IL6Fuu6hKlvtDr_7tvjKg7AMXCnYeMoMqJgiUmezUL76f2mZL";
-
+	@Autowired
+	private PaypalConfig paypalConfig;
 
 
 	public Map<String, Object> createPayment(String sum) {
@@ -46,17 +44,19 @@ public class PaypalService {
 
 		RedirectUrls redirectUrls = new RedirectUrls();
 		System.out.println("before cancel");
-		redirectUrls.setCancelUrl("http://localhost:4200/cancel");
+		redirectUrls.setCancelUrl("http://localhost:3000/cancel");
 		System.out.println("before confirm");
-		redirectUrls.setReturnUrl("http://localhost:4200");
+		redirectUrls.setReturnUrl("http://localhost:3000/confirmation");
+
 		payment.setRedirectUrls(redirectUrls);
+//		System.out.println(payment.setRedirectUrls(redirectUrls));
 		Payment createdPayment;
 		try {
 			String redirectUrl = "";
 			System.out.println("1st");
-			APIContext context = new APIContext(clientId, clientSecret, "sandbox");
+			//APIContext context = new APIContext(clientId, clientSecret, "sandbox");
 			System.out.println("2nd");
-			createdPayment = payment.create(context);
+			createdPayment = payment.create(paypalConfig.apiContext());
 			System.out.println(createdPayment);
 			System.out.println("3rd");
 			if (createdPayment != null) {
@@ -74,21 +74,21 @@ public class PaypalService {
 		} catch (PayPalRESTException e) {
 			System.out.println("Error happened during payment creation!");
 		}
+		System.out.println(response);
 		return response;
 	}
 
-	public Map<String, Object> completePayment(HttpServletRequest req) {
+	public Map<String, Object> completePayment(String token, String paymentId, String payerId) {
+
 		System.out.println("in complete payments");
-		Map<String, Object> response = new HashMap<String,Object>();
+		Map<String, Object> response = new HashMap<String, Object>();
 		Payment payment = new Payment();
-		String accessToken=req.getParameter("token");
-		
-		payment.setId(req.getParameter("paymentId"));
+		payment.setId(paymentId);
 		PaymentExecution paymentExecution = new PaymentExecution();
-		paymentExecution.setPayerId(req.getParameter("payerId"));
+		paymentExecution.setPayerId(payerId);
 		try {
-			APIContext context = new APIContext(clientId, clientSecret, "sandbox");
-			Payment createdPayment = payment.execute(context, paymentExecution);
+			//APIContext context = new APIContext(clientId, clientSecret, "sandbox");
+			Payment createdPayment = payment.execute(paypalConfig.apiContext(), paymentExecution);
 			System.out.println(createdPayment);
 			if (createdPayment != null) {
 				System.out.println("hi");
@@ -97,6 +97,7 @@ public class PaypalService {
 			}
 		} catch (PayPalRESTException e) {
 			System.err.println(e.getDetails());
+			response.put("payment",e.getDetails() );
 		}
 		System.out.println(response);
 		return response;
